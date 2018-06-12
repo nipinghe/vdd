@@ -1,22 +1,8 @@
-# Copyright 2018 The TensorFlow Authors All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
 """Wrapper for providing semantic segmentation data."""
 
 import tensorflow as tf
-from deeplab import common
-from deeplab import input_preprocess
+import common
+import input_preprocess
 
 slim = tf.contrib.slim
 
@@ -60,14 +46,7 @@ def _get_data(data_provider, dataset_split):
 
 
 def get(dataset,
-        crop_size,
         batch_size,
-        min_resize_value=None,
-        max_resize_value=None,
-        resize_factor=None,
-        min_scale_factor=1.,
-        max_scale_factor=1.,
-        scale_factor_step_size=0,
         num_readers=1,
         num_threads=1,
         dataset_split=None,
@@ -134,15 +113,6 @@ def get(dataset,
   original_image, image, label = input_preprocess.preprocess_image_and_label(
       image,
       label,
-      crop_height=crop_size[0],
-      crop_width=crop_size[1],
-      min_resize_value=min_resize_value,
-      max_resize_value=max_resize_value,
-      resize_factor=resize_factor,
-      min_scale_factor=min_scale_factor,
-      max_scale_factor=max_scale_factor,
-      scale_factor_step_size=scale_factor_step_size,
-      ignore_label=dataset.ignore_label,
       is_training=is_training,
       model_variant=model_variant)
   sample = {

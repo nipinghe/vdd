@@ -1,17 +1,3 @@
-# Copyright 2018 The TensorFlow Authors All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
 """Saves an annotation as one png image.
 
 This script saves an annotation as one png image, and has the option to add
@@ -22,14 +8,13 @@ import numpy as np
 import PIL.Image as img
 import tensorflow as tf
 
-from deeplab.utils import get_dataset_colormap
+import get_dataset_colormap
 
 
 def save_annotation(label,
                     save_dir,
                     filename,
-                    add_colormap=True,
-                    colormap_type=get_dataset_colormap.get_pascal_name()):
+                    add_colormap=True):
   """Saves the given label to image on disk.
 
   Args:
@@ -43,7 +28,7 @@ def save_annotation(label,
   # Add colormap for visualizing the prediction.
   if add_colormap:
     colored_label = get_dataset_colormap.label_to_color_image(
-        label, colormap_type)
+        label)
   else:
     colored_label = label
 

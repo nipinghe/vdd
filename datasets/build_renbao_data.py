@@ -1,41 +1,22 @@
-# Copyright 2018 The TensorFlow Authors All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+"""Converts data to TFRecord file format with Example protos.
 
-"""Converts PASCAL VOC 2012 data to TFRecord file format with Example protos.
+dataset is expected to have the following directory structure:
 
-PASCAL VOC 2012 dataset is expected to have the following directory structure:
-
-  + pascal_voc_seg
-    - build_data.py
-    - build_voc2012_data.py (current working directory).
-    + VOCdevkit
-      + VOC2012
-        + JPEGImages
-        + SegmentationClass
-        + ImageSets
-          + Segmentation
-    + tfrecord
+  + data
+    + image
+    + labelclass
+    + labelraw
+    + segmentation
+  + tfrecord
 
 Image folder:
-  ./VOCdevkit/VOC2012/JPEGImages
+  ../../data/image
 
 Semantic segmentation annotations:
-  ./VOCdevkit/VOC2012/SegmentationClass
+  ../../data/labelraw
 
 list folder:
-  ./VOCdevkit/VOC2012/ImageSets/Segmentation
+  ../../data/segmentation
 
 This script converts data into sharded data files and save at tfrecord folder.
 
@@ -53,32 +34,33 @@ The Example proto contains the following fields:
 import math
 import os.path
 import sys
+import PIL.Image as img
 import build_data
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('image_folder',
-                           './VOCdevkit/VOC2012/JPEGImages',
+                           '../../data/image',
                            'Folder containing images.')
 
 tf.app.flags.DEFINE_string(
     'semantic_segmentation_folder',
-    './VOCdevkit/VOC2012/SegmentationClassRaw',
+    '../../data/labelraw',
     'Folder containing semantic segmentation annotations.')
 
 tf.app.flags.DEFINE_string(
     'list_folder',
-    './VOCdevkit/VOC2012/ImageSets/Segmentation',
+    '../../data/segmentation',
     'Folder containing lists for training and validation')
 
 tf.app.flags.DEFINE_string(
     'output_dir',
-    './tfrecord',
+    '../../tfrecord',
     'Path to save converted SSTable of TensorFlow examples.')
 
 
-_NUM_SHARDS = 4
+_NUM_SHARDS = 1
 
 
 def _convert_dataset(dataset_split):
@@ -91,10 +73,11 @@ def _convert_dataset(dataset_split):
     RuntimeError: If loaded image and label have different shape.
   """
   dataset = os.path.basename(dataset_split)[:-4]
-  sys.stdout.write('Processing ' + dataset)
+  sys.stdout.write('\r>> Processing ' + dataset+'\n')
   filenames = [x.strip('\n') for x in open(dataset_split, 'r')]
   num_images = len(filenames)
   num_per_shard = int(math.ceil(num_images / float(_NUM_SHARDS)))
+  sys.stdout.write('\r>> the %s contains %d samples\n' % (dataset,num_per_shard)) 
 
   image_reader = build_data.ImageReader('jpeg', channels=3)
   label_reader = build_data.ImageReader('png', channels=1)
@@ -102,23 +85,26 @@ def _convert_dataset(dataset_split):
   for shard_id in range(_NUM_SHARDS):
     output_filename = os.path.join(
         FLAGS.output_dir,
-        '%s-%05d-of-%05d.tfrecord' % (dataset, shard_id, _NUM_SHARDS))
+        '%s-%05d-of-%d.tfrecord' % (dataset, shard_id, _NUM_SHARDS))
     with tf.python_io.TFRecordWriter(output_filename) as tfrecord_writer:
       start_idx = shard_id * num_per_shard
       end_idx = min((shard_id + 1) * num_per_shard, num_images)
       for i in range(start_idx, end_idx):
-        sys.stdout.write('\r>> Converting image %d/%d shard %d' % (
+        sys.stdout.write('\r>> Converting image %d/%d shard %d\n' % (
             i + 1, len(filenames), shard_id))
         sys.stdout.flush()
         # Read the image.
         image_filename = os.path.join(
             FLAGS.image_folder, filenames[i] + '.' + FLAGS.image_format)
+        test_shape = img.open(image_filename).size
         image_data = tf.gfile.FastGFile(image_filename, 'rb').read()
         height, width = image_reader.read_image_dims(image_data)
+        assert(test_shape == (width,height))
         # Read the semantic segmentation annotation.
         seg_filename = os.path.join(
             FLAGS.semantic_segmentation_folder,
             filenames[i] + '.' + FLAGS.label_format)
+        test_label_shape = img.open(seg_filename).size
         seg_data = tf.gfile.FastGFile(seg_filename, 'rb').read()
         seg_height, seg_width = label_reader.read_image_dims(seg_data)
         if height != seg_height or width != seg_width:

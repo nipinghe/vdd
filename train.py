@@ -1,17 +1,3 @@
-# Copyright 2018 The TensorFlow Authors All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
 """Training script for the DeepLab model.
 
 See model.py for more details and usage.
@@ -19,11 +5,11 @@ See model.py for more details and usage.
 
 import six
 import tensorflow as tf
-from deeplab import common
-from deeplab import model
-from deeplab.datasets import segmentation_dataset
-from deeplab.utils import input_generator
-from deeplab.utils import train_utils
+from core import common
+import model
+from datasets import segmentation_dataset
+from core import input_generator
+from utils import train_utils
 from deployment import model_deploy
 
 slim = tf.contrib.slim
@@ -136,15 +122,6 @@ flags.DEFINE_float('slow_start_learning_rate', 1e-4,
 flags.DEFINE_boolean('fine_tune_batch_norm', True,
                      'Fine tune the batch norm parameters or not.')
 
-flags.DEFINE_float('min_scale_factor', 0.5,
-                   'Mininum scale factor for data augmentation.')
-
-flags.DEFINE_float('max_scale_factor', 2.,
-                   'Maximum scale factor for data augmentation.')
-
-flags.DEFINE_float('scale_factor_step_size', 0.25,
-                   'Scale factor step size for data augmentation.')
-
 # For `xception_65`, use atrous_rates = [12, 24, 36] if output_stride = 8, or
 # rates = [6, 12, 18] if output_stride = 16. For `mobilenet_v2`, use None. Note
 # one could use different atrous_rates/output_stride during training/evaluation.
@@ -155,13 +132,13 @@ flags.DEFINE_integer('output_stride', 16,
                      'The ratio of input to output spatial resolution.')
 
 # Dataset settings.
-flags.DEFINE_string('dataset', 'pascal_voc_seg',
+flags.DEFINE_string('dataset', 'car_damage',
                     'Name of the segmentation dataset.')
 
 flags.DEFINE_string('train_split', 'train',
                     'Which split of the dataset to be used for training')
 
-flags.DEFINE_string('dataset_dir', None, 'Where the dataset reside.')
+flags.DEFINE_string('dataset_dir', '../tfrecord', 'Where the dataset reside.')
 
 
 def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
@@ -190,13 +167,11 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
 
   model_options = common.ModelOptions(
       outputs_to_num_classes=outputs_to_num_classes,
-      crop_size=FLAGS.train_crop_size,
       atrous_rates=FLAGS.atrous_rates,
       output_stride=FLAGS.output_stride)
   outputs_to_scales_to_logits = model.multi_scale_logits(
       samples[common.IMAGE],
       model_options=model_options,
-      image_pyramid=FLAGS.image_pyramid,
       weight_decay=FLAGS.weight_decay,
       is_training=True,
       fine_tune_batch_norm=FLAGS.fine_tune_batch_norm)
@@ -247,14 +222,7 @@ def main(unused_argv):
     with tf.device(config.inputs_device()):
       samples = input_generator.get(
           dataset,
-          FLAGS.train_crop_size,
           clone_batch_size,
-          min_resize_value=FLAGS.min_resize_value,
-          max_resize_value=FLAGS.max_resize_value,
-          resize_factor=FLAGS.resize_factor,
-          min_scale_factor=FLAGS.min_scale_factor,
-          max_scale_factor=FLAGS.max_scale_factor,
-          scale_factor_step_size=FLAGS.scale_factor_step_size,
           dataset_split=FLAGS.train_split,
           is_training=True,
           model_variant=FLAGS.model_variant)

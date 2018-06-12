@@ -1,53 +1,4 @@
-# Copyright 2018 The TensorFlow Authors All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-
-"""Provides data from semantic segmentation datasets.
-
-The SegmentationDataset class provides both images and annotations (semantic
-segmentation and/or instance segmentation) for TensorFlow. Currently, we
-support the following datasets:
-
-1. PASCAL VOC 2012 (http://host.robots.ox.ac.uk/pascal/VOC/voc2012/).
-
-PASCAL VOC 2012 semantic segmentation dataset annotates 20 foreground objects
-(e.g., bike, person, and so on) and leaves all the other semantic classes as
-one background class. The dataset contains 1464, 1449, and 1456 annotated
-images for the training, validation and test respectively.
-
-2. Cityscapes dataset (https://www.cityscapes-dataset.com)
-
-The Cityscapes dataset contains 19 semantic labels (such as road, person, car,
-and so on) for urban street scenes.
-
-3. ADE20K dataset (http://groups.csail.mit.edu/vision/datasets/ADE20K)
-
-The ADE20K dataset contains 150 semantic labels both urban street scenes and
-indoor scenes.
-
-References:
-  M. Everingham, S. M. A. Eslami, L. V. Gool, C. K. I. Williams, J. Winn,
-  and A. Zisserman, The pascal visual object classes challenge a retrospective.
-  IJCV, 2014.
-
-  M. Cordts, M. Omran, S. Ramos, T. Rehfeld, M. Enzweiler, R. Benenson,
-  U. Franke, S. Roth, and B. Schiele, "The cityscapes dataset for semantic urban
-  scene understanding," In Proc. of CVPR, 2016.
-
-  B. Zhou, H. Zhao, X. Puig, S. Fidler, A. Barriuso, A. Torralba, "Scene Parsing
-  through ADE20K dataset", In Proc. of CVPR, 2017.
-"""
+"""Provides data from semantic segmentation datasets."""
 import collections
 import os.path
 import tensorflow as tf
@@ -74,50 +25,22 @@ DatasetDescriptor = collections.namedtuple(
     ]
 )
 
-_CITYSCAPES_INFORMATION = DatasetDescriptor(
+_CARDATA_INFORMATION = DatasetDescriptor(
     splits_to_sizes={
-        'train': 2975,
-        'val': 500,
+        'train': 200,
+        'val': 93,
     },
-    num_classes=19,
-    ignore_label=255,
-)
-
-_PASCAL_VOC_SEG_INFORMATION = DatasetDescriptor(
-    splits_to_sizes={
-        'train': 1464,
-        'trainval': 2913,
-        'val': 1449,
-    },
-    num_classes=21,
-    ignore_label=255,
-)
-
-# These number (i.e., 'train'/'test') seems to have to be hard coded
-# You are required to figure it out for your training/testing example.
-_ADE20K_INFORMATION = DatasetDescriptor(
-    splits_to_sizes = {
-        'train': 20210, # num of samples in images/training
-        'val': 2000, # num of samples in images/validation
-    },
-    num_classes=150,
+    num_classes=8,
     ignore_label=255,
 )
 
 
 _DATASETS_INFORMATION = {
-    'cityscapes': _CITYSCAPES_INFORMATION,
-    'pascal_voc_seg': _PASCAL_VOC_SEG_INFORMATION,
-    'ade20k': _ADE20K_INFORMATION,
+    'car_damage': _CARDATA_INFORMATION
 }
 
 # Default file pattern of TFRecord of TensorFlow Example.
 _FILE_PATTERN = '%s-*'
-
-
-def get_cityscapes_dataset_name():
-  return 'cityscapes'
-
 
 def get_dataset(dataset_name, split_name, dataset_dir):
   """Gets an instance of slim Dataset.

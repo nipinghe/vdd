@@ -1,17 +1,3 @@
-# Copyright 2018 The TensorFlow Authors All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
 """Provides flags that are common to scripts.
 
 Common flags from train/eval/vis/export_model.py are collected in this script.
@@ -22,17 +8,6 @@ import tensorflow as tf
 
 flags = tf.app.flags
 
-# Flags for input preprocessing.
-
-flags.DEFINE_integer('min_resize_value', None,
-                     'Desired size of the smaller image side.')
-
-flags.DEFINE_integer('max_resize_value', None,
-                     'Maximum allowed size of the larger image side.')
-
-flags.DEFINE_integer('resize_factor', None,
-                     'Resized dimensions are multiple of factor plus one.')
-
 # Model dependent flags.
 
 flags.DEFINE_integer('logits_kernel_size', 1,
@@ -42,11 +17,8 @@ flags.DEFINE_integer('logits_kernel_size', 1,
 # When using 'mobilent_v2', we set atrous_rates = decoder_output_stride = None.
 # When using 'xception_65', we set atrous_rates = [6, 12, 18] (output stride 16)
 # and decoder_output_stride = 4.
-flags.DEFINE_enum('model_variant', 'mobilenet_v2',
-                  ['xception_65', 'mobilenet_v2'], 'DeepLab model variant.')
-
-flags.DEFINE_multi_float('image_pyramid', None,
-                         'Input scales for multi-scale feature extraction.')
+flags.DEFINE_enum('model_variant', 'xception_65',
+                  ['xception_65'], 'DeepLab model variant.')
 
 flags.DEFINE_boolean('add_image_level_feature', True,
                      'Add image level feature.')
@@ -98,7 +70,6 @@ TEST_SET = 'test'
 class ModelOptions(
     collections.namedtuple('ModelOptions', [
         'outputs_to_num_classes',
-        'crop_size',
         'atrous_rates',
         'output_stride',
         'merge_method',
@@ -117,7 +88,6 @@ class ModelOptions(
 
   def __new__(cls,
               outputs_to_num_classes,
-              crop_size=None,
               atrous_rates=None,
               output_stride=8):
     """Constructor to set default values.
@@ -134,7 +104,7 @@ class ModelOptions(
       A new ModelOptions instance.
     """
     return super(ModelOptions, cls).__new__(
-        cls, outputs_to_num_classes, crop_size, atrous_rates, output_stride,
+        cls, outputs_to_num_classes, atrous_rates, output_stride,
         FLAGS.merge_method, FLAGS.add_image_level_feature,
         FLAGS.aspp_with_batch_norm, FLAGS.aspp_with_separable_conv,
         FLAGS.multi_grid, FLAGS.decoder_output_stride,
